@@ -16,10 +16,14 @@
 
 package android.app;
 
+import android.content.res.IThemeService;
+import android.content.res.ThemeManager;
 import android.os.Build;
 import com.android.internal.policy.PolicyManager;
 import com.android.internal.util.Preconditions;
 
+import android.accounts.AccountManager;
+import android.accounts.IAccountManager;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -41,6 +45,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.content.res.CompatibilityInfo;
 import android.content.res.Configuration;
+import android.content.res.CustomTheme;
 import android.content.res.Resources;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
@@ -595,6 +600,14 @@ class ContextImpl extends Context {
             public Object createService(ContextImpl ctx) {
                 return new ConsumerIrManager(ctx);
             }});
+            
+        registerService(THEME_SERVICE, new ServiceFetcher() {
+            public Object createService(ContextImpl ctx) {
+                IBinder b = ServiceManager.getService(THEME_SERVICE);
+                IThemeService service = IThemeService.Stub.asInterface(b);
+                return new ThemeManager(ctx.getOuterContext(),
+                        service);
+            }});
     }
 
     static ContextImpl getImpl(Context context) {
@@ -619,6 +632,20 @@ class ContextImpl extends Context {
     @Override
     public Resources getResources() {
         return mResources;
+    }
+    
+    /**
+     * Refresh resources object which may have been changed by a theme
+     * configuration change.
+     */
+    /* package */ void refreshResourcesIfNecessary() {
+        if (mResources == Resources.getSystem()) {
+            return;
+        }
+
+        if (mPackageInfo.getCompatibilityInfo().isThemeable) {
+            mTheme = null;
+        }
     }
 
     @Override
@@ -1912,7 +1939,7 @@ class ContextImpl extends Context {
         if (overrideConfiguration == null) {
             throw new IllegalArgumentException("overrideConfiguration must not be null");
         }
-
+        
         return new ContextImpl(this, mMainThread, mPackageInfo, mActivityToken,
                 mUser, mRestricted, mDisplay, overrideConfiguration);
     }
@@ -1922,7 +1949,7 @@ class ContextImpl extends Context {
         if (display == null) {
             throw new IllegalArgumentException("display must not be null");
         }
-
+        
         return new ContextImpl(this, mMainThread, mPackageInfo, mActivityToken,
                 mUser, mRestricted, display, mOverrideConfiguration);
     }
@@ -2026,9 +2053,9 @@ class ContextImpl extends Context {
                     || overrideConfiguration != null
                     || (compatInfo != null && compatInfo.applicationScale
                             != resources.getCompatibilityInfo().applicationScale)) {
-                resources = mResourcesManager.getTopLevelResources(
-                        packageInfo.getResDir(), displayId,
-                        overrideConfiguration, compatInfo, activityToken);
+                resources = mResourcesManager.getTopLevelResources(packageInfo.getResDir(), 
+					   mPackageInfo.getOverlayDirs(), Display.DEFAULT_DISPLAY, mPackageInfo.getAppDir(), null, compatInfo,
+                       activityToken, this);
             }
         }
         mResources = resources;
