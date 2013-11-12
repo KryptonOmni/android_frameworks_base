@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 The Android Open Source Project
+ * This code has been modified. Portions copyright (C) 2013, ParanoidAndroid Project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,6 +98,8 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
     private CircleMemoryMeter mRecentsMemoryIndicator;
     private boolean mUpdateMemoryIndicator;
 
+    private RecentsActivity mRecentsActivity;
+
     public static interface RecentsScrollView {
         public int numItemsInOneScreenful();
         public void setAdapter(TaskDescriptionAdapter adapter);
@@ -105,6 +108,7 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         public View findViewForTask(int persistentTaskId);
         public void drawFadedEdges(Canvas c, int left, int right, int top, int bottom);
         public void setOnScrollListener(Runnable listener);
+        public void swipeAllViewsInLayout();
     }
 
     private final class OnLongClickDelegate implements View.OnLongClickListener {
@@ -273,6 +277,7 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
 
         mRecentItemLayoutId = a.getResourceId(R.styleable.RecentsPanelView_recentItemLayout, 0);
         mRecentTasksLoader = RecentTasksLoader.getInstance(context);
+        mRecentsActivity = (RecentsActivity) context;
         a.recycle();
     }
 
@@ -342,6 +347,8 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         sendCloseSystemWindows(mContext, BaseStatusBar.SYSTEM_DIALOG_REASON_RECENT_APPS);
 
         mShowing = show;
+
+        mRecentsActivity.setRecentHints(show && getTasks() > 0);
 
         if (show) {
             // if there are no apps, bring up a "No recent apps" message
@@ -421,6 +428,8 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
             if (mUpdateMemoryIndicator) {
                 mRecentsMemoryIndicator.updateMemoryInfo();
             }
+
+            mRecentsNoApps.setVisibility(getTasks() == 0 ? View.VISIBLE : View.INVISIBLE);
             onAnimationEnd(null);
             setFocusable(true);
             setFocusableInTouchMode(true);
@@ -443,8 +452,15 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         }
     }
 
+    public int getTasks() {
+        return mRecentTaskDescriptions != null ? mRecentTaskDescriptions.size()
+                : 0;
+    }
+
     public void onUiHidden() {
         mCallUiHiddenBeforeNextReload = false;
+        // Make sure hint is restored at the last stage
+        mRecentsActivity.setRecentHints(false);
         if (!mShowing && mRecentTaskDescriptions != null) {
             onAnimationEnd(null);
             clearRecentTasksList();
@@ -452,11 +468,11 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
     }
 
     public void dismiss() {
-        ((RecentsActivity) mContext).dismissAndGoHome();
+        mRecentsActivity.dismissAndGoHome();
     }
 
     public void dismissAndGoBack() {
-        ((RecentsActivity) mContext).dismissAndGoBack();
+        mRecentsActivity.dismissAndGoBack();
     }
 
     public void onAnimationCancel(Animator animation) {
@@ -559,6 +575,12 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
                 ((BitmapDrawable) mRecentsScrim.getBackground()).setTileModeY(TileMode.REPEAT);
             }
         }
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        mRecentsActivity.setRecentHints(mShowing && getTasks() > 0);
+        super.onSizeChanged(w, h, oldw, oldh);
     }
 
     public void setMinSwipeAlpha(float minAlpha) {
@@ -687,6 +709,12 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         }
     }
 
+    public void clearRecentViewList(){
+        if (mShowing) {
+            mRecentsContainer.swipeAllViewsInLayout();
+        }
+    }
+
     public void onTaskLoadingCancelled() {
         // Gets called by RecentTasksLoader when it's cancelled
         if (mRecentTaskDescriptions != null) {
@@ -720,7 +748,7 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         } else {
             mRecentTaskDescriptions.addAll(tasks);
         }
-        if (((RecentsActivity) mContext).isActivityShowing()) {
+        if (mRecentsActivity.isActivityShowing()) {
             refreshViews();
         }
     }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * This code has been modified. Portions copyright (C) 2013, ParanoidAndroid Project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +53,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.android.systemui.R;
+import com.android.systemui.recent.NavigationCallback;
+import com.android.systemui.recent.RecentsActivity;
 import com.android.systemui.statusbar.BaseStatusBar;
 import com.android.systemui.statusbar.DelegateViewHelper;
 import com.android.systemui.statusbar.policy.DeadZone;
@@ -60,7 +63,7 @@ import com.android.systemui.statusbar.policy.KeyButtonView;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 
-public class NavigationBarView extends LinearLayout {
+public class NavigationBarView extends LinearLayout implements NavigationCallback {
     final static boolean DEBUG = false;
     final static String TAG = "PhoneStatusBar/NavigationBarView";
 
@@ -231,6 +234,8 @@ public class NavigationBarView extends LinearLayout {
         mShowMenu = false;
         mDelegateHelper = new DelegateViewHelper(this);
 
+        RecentsActivity.setNavigationCallback(this);
+
         getIcons(res);
 
         mBarTransitions = new NavigationBarTransitions(this);
@@ -261,7 +266,7 @@ public class NavigationBarView extends LinearLayout {
     public BarTransitions getBarTransitions() {
         return mBarTransitions;
     }
-
+    
     public void setDelegateView(View view) {
         mDelegateHelper.setDelegateView(view);
     }
@@ -467,10 +472,14 @@ public class NavigationBarView extends LinearLayout {
     }
 
     public void setNavigationIconHints(int hints) {
-        setNavigationIconHints(hints, false);
+        setNavigationIconHints(NavigationCallback.NAVBAR_BACK_HINT, hints, false);
     }
 
     public void setNavigationIconHints(int hints, boolean force) {
+        setNavigationIconHints(NavigationCallback.NAVBAR_BACK_HINT, hints, force);
+    }
+
+    public void setNavigationIconHints(int button, int hints, boolean force) {
         if (!force && hints == mNavigationIconHints) return;
         final boolean backAlt = (hints & StatusBarManager.NAVIGATION_HINT_BACK_ALT) != 0;
         if ((mNavigationIconHints & StatusBarManager.NAVIGATION_HINT_BACK_ALT) != 0 && !backAlt) {
@@ -478,7 +487,7 @@ public class NavigationBarView extends LinearLayout {
         }
         if (DEBUG) {
             android.widget.Toast.makeText(mContext,
-                "Navigation icon hints = " + hints,
+                "Navigation icon hints = " + hints+" button = "+button,
                 500).show();
         }
 
@@ -495,9 +504,25 @@ public class NavigationBarView extends LinearLayout {
 
         if (recentView != null) {
             recentView.setImageDrawable(mVertical ? mRecentLandIcon : mRecentIcon);
+		}
+		
+        if(button == NavigationCallback.NAVBAR_BACK_HINT) {
+            ((ImageView)findViewWithTag(NavbarEditor.NAVBAR_BACK)).setImageDrawable(
+                (0 != (hints & StatusBarManager.NAVIGATION_HINT_BACK_ALT))
+                    ? (mVertical ? mBackAltLandIcon : mBackAltIcon)
+                    : (mVertical ? mBackLandIcon : mBackIcon));
+        } else if (button == NavigationCallback.NAVBAR_RECENTS_HINT) {
+            ((ImageView)findViewWithTag(NavbarEditor.NAVBAR_RECENT)).setImageDrawable(
+                (0 != (hints & StatusBarManager.NAVIGATION_HINT_RECENT_ALT))
+                    ? (mVertical ? mRecentAltLandIcon : mRecentAltIcon)
+                    : (mVertical ? mRecentLandIcon : mRecentIcon));
         }
 
         setDisabledFlags(mDisabledFlags, true);
+    }
+
+    public int getNavigationIconHints() {
+        return mNavigationIconHints;
     }
 
     public void setDisabledFlags(int disabledFlags) {
@@ -703,6 +728,9 @@ public class NavigationBarView extends LinearLayout {
         }
 
         setNavigationIconHints(mNavigationIconHints, true);
+        // Reset recents hints after reorienting
+        ((ImageView)findViewWithTag(NavbarEditor.NAVBAR_RECENT)).setImageDrawable(mVertical
+                ? mRecentLandIcon : mRecentIcon);
     }
 
     @Override
