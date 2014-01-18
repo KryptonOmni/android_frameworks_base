@@ -23,7 +23,6 @@
     <!-- Reboot Confirmation Dialog.  When the user chooses to reboot the phone, there will be a confirmation dialog.  This is the message. -->
     <string name="reboot_confirm" product="tablet">Se reiniciará tu tablet.</string>
     <string name="reboot_confirm" product="default">Se reiniciará tu teléfono.</string>
-
     <string name="global_action_screenshot">Capturar Pantalla</string>
     <string name="global_action_screenrecord">Grabar Pantalla</string>
     <string name="app_killed_message">Apliación cerrada</string>
@@ -58,4 +57,7 @@
 
     <string name="toast_rotation_unlocked">Rotación de pantalla bloqueada</string>
     <string name="toast_rotation_locked">Rotación de pantalla desbloqueada</string>
+
+    <string name="setting_confirmation_ask_me_later">Más tarde</string>
+    <string name="setting_confirmation_yes">Si</string>
 </resources>

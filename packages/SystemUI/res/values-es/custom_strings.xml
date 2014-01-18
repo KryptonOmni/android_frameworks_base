@@ -122,4 +122,6 @@
     <string name="navbar_menu_always_button">Menú (persistente)</string>
     <string name="navbar_menu_big_button">Menú</string>
 
+    <string name="quick_settings_quick_pull_down_title">Despliegue rápido</string>
+    <string name="quick_settings_quick_pull_down_message">¿Le gustaría que el borde de la barra de notificaciones despliegue el panel de ajustes rápidos?</string>
 </resources>
