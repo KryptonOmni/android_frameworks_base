@@ -534,6 +534,8 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
 
     private long mLastClickTime = 0;
 
+    private boolean mRibbon = false;
+
     private QuickSettingsTileView mUserTile;
     private RefreshCallback mUserCallback;
     private UserState mUserState = new UserState();
@@ -668,8 +670,9 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
         }
     };
 
-    public QuickSettingsModel(Context context) {
+    public QuickSettingsModel(Context context, boolean ribbon) {
         mContext = context;
+        mRibbon = ribbon;
         mHandler = new Handler();
         mUserTracker = new CurrentUserTracker(context) {
             @Override
@@ -868,6 +871,8 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
             return;
         }
 
+        if (mRibbon) return;
+
         mAlarmState.enabled = intent.getBooleanExtra("alarmSet", false);
         mAlarmCallback.refreshView(mAlarmTile, mAlarmState);
     }
@@ -876,6 +881,8 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
         if (mAlarmTile == null) {
             return;
         }
+
+        if (mRibbon) return;
 
         final String alarmText = Settings.System.getStringForUser(mContext.getContentResolver(),
                 Settings.System.NEXT_ALARM_FORMATTED,
@@ -1676,6 +1683,7 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
         if (mBugreportTile == null) {
             return;
         }
+        if (mRibbon) return;
 
         final ContentResolver cr = mContext.getContentResolver();
         boolean enabled = false;
@@ -1718,6 +1726,7 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
         if (mRemoteDisplayTile == null) {
             return;
         }
+        if (mRibbon) return;
 
         Resources r = mContext.getResources();
         MediaRouter.RouteInfo connectedRoute = mMediaRouter.getSelectedRoute(
@@ -1801,6 +1810,8 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
     }
 
     void onImeWindowStatusChanged(boolean visible) {
+        if (mRibbon) return;
+
         InputMethodManager imm =
                 (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         List<InputMethodInfo> imis = imm.getInputMethodList();
@@ -2109,6 +2120,8 @@ public class QuickSettingsModel implements BluetoothStateChangeCallback,
     }
 
     public void setSslCaCertWarningTileInfo(boolean hasCert, boolean isManaged) {
+        if (mRibbon) return;
+
         Resources r = mContext.getResources();
         mSslCaCertWarningState.enabled = hasCert;
         if (isManaged) {
