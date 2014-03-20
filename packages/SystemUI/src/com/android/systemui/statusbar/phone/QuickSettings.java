@@ -783,8 +783,7 @@ class QuickSettings {
                   mImmersiveTile.setSupportFlip(DeviceUtils.deviceSupportNavigationBar(mContext));
                   mImmersiveTile.setFrontImageResource(R.drawable.ic_qs_immersive_global_off);
                   mImmersiveTile.setFrontText(mContext.getString(R.string.quick_settings_immersive_global_off_label));
-                  mModel.addImmersiveFrontTile(mImmersiveTile.getFront(), new QuickSettingsModel.RefreshCallback() {
-                  immersiveTile.setFrontOnClickListener(new View.OnClickListener() {
+                  mImmersiveTile.setFrontOnClickListener(new View.OnClickListener() {
 					  @Override
                       public void onClick(View v) {
                           if (!immsersiveStyleSelected() && mModel.getImmersiveMode() == 0) {
@@ -795,7 +794,7 @@ class QuickSettings {
                           }
                       }
                   });
-                  mModel.addImmersiveFrontTile(immersiveTile.getFront(), new QuickSettingsModel.RefreshCallback() {
+                  mModel.addImmersiveFrontTile(mImmersiveTile.getFront(), new QuickSettingsModel.RefreshCallback() {
                         @Override
                         public void refreshView(QuickSettingsTileView unused, State state) {
                             mImmersiveTile.setFrontImageResource(state.iconId);
