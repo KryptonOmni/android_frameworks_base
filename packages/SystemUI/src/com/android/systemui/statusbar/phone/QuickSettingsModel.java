@@ -31,6 +31,7 @@ import android.content.SyncStatusObserver;
 import android.database.ContentObserver;
 import android.graphics.drawable.Drawable;
 import android.hardware.usb.UsbManager;
+import android.net.Uri;
 import android.media.AudioManager;
 import android.media.MediaRouter;
 import android.media.MediaRouter.RouteInfo;
@@ -80,7 +81,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-class QuickSettingsModel implements BluetoothStateChangeCallback,
+public class QuickSettingsModel implements BluetoothStateChangeCallback,
         NetworkSignalChangedCallback,
         BatteryStateChangeCallback,
         BrightnessStateChangeCallback,
@@ -397,8 +398,13 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
         }
 
         @Override
-        public void onChange(boolean selfChange) {
-            onImmersiveFlipChanged();
+        public void onChange(boolean selfChange, Uri uri) {
+			onImmersiveFlipChanged();
+            if (uri.equals(Settings.System.getUriFor(Settings.System.PIE_STATE))) {
+                boolean enablePie = Settings.System.getInt(mContext.getContentResolver(),
+                        Settings.System.PIE_STATE, 0) != 0;
+                if (enablePie) switchImmersiveFront();
+            }
             onImmersiveFrontChanged();
             onImmersiveBackChanged();
         }
@@ -413,6 +419,8 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
                     Settings.System.getUriFor(Settings.System.NAVIGATION_BAR_SHOW),
                     false, this, mUserTracker.getCurrentUserId());
 
+            cr.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.PIE_STATE), false, this);
         }
     }
 
@@ -1937,13 +1945,15 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
         int mode = getImmersiveMode();
         int iconId = R.drawable.ic_qs_immersive_global_off;
         String label = r.getString(R.string.quick_settings_immersive_global_off_label);
-        switch (mode) {
-               case IMMERSIVE_MODE_FULL:
-               case IMMERSIVE_MODE_HIDE_ONLY_NAVBAR:
-               case IMMERSIVE_MODE_HIDE_ONLY_STATUSBAR:
-                    iconId = R.drawable.ic_qs_immersive_global_on;
-                    label = r.getString(R.string.quick_settings_immersive_global_on_label);
-                    break;
+        final boolean enabled = isPieEnabled();
+        if (mode == IMMERSIVE_MODE_OFF) {
+            mImmersiveFrontState.iconId = enabled ?
+                    R.drawable.ic_qs_pie_global_off : R.drawable.ic_qs_immersive_global_off;
+            mImmersiveFrontState.label = r.getString(R.string.quick_settings_immersive_global_off_label);
+        } else {
+            mImmersiveFrontState.iconId = enabled ?
+                    R.drawable.ic_qs_pie_global_on : R.drawable.ic_qs_immersive_global_on;
+            mImmersiveFrontState.label = r.getString(R.string.quick_settings_immersive_global_on_label);
         }
         mImmersiveFrontState.iconId = iconId;
         mImmersiveFrontState.label = label;
@@ -1990,7 +2000,7 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
         }
     }
 
-    private int getImmersiveMode() {
+    protected int getImmersiveMode() {
         return Settings.System.getIntForUser(mContext.getContentResolver(),
                 Settings.System.IMMERSIVE_MODE, IMMERSIVE_MODE_OFF, UserHandle.USER_CURRENT);
     }
@@ -2016,7 +2026,7 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
                 , UserHandle.USER_CURRENT);
     }
 
-    private void switchImmersiveFront() {
+    protected void switchImmersiveFront() {
         int mode = getImmersiveMode();
         immersiveModeLastState = getImmersiveLastActiveState();
         switch (mode) {
@@ -2244,7 +2254,12 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
         mRingerModeState.label = r.getString(RINGERS[mRingerIndex].mString);
         if (mRingerModeTile != null) {
             mRingerModeCallback.refreshView(mRingerModeTile, mRingerModeState);
-        }
+		}
+	}
+
+    protected boolean isPieEnabled() {
+        return Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.PIE_STATE, 0) == 1;
     }
 
     private void findCurrentState() {

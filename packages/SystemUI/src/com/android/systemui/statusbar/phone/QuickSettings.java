@@ -62,6 +62,7 @@ import android.provider.Settings;
 import android.security.KeyChain;
 import android.provider.Settings.SettingNotFoundException;
 import android.util.Log;
+import android.util.SettingConfirmationHelper;
 import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
@@ -358,6 +359,12 @@ class QuickSettings {
                         , UserHandle.USER_CURRENT);
         mBatteryTile.updateBatterySettings();
         mModel.refreshBatteryTile();
+    }
+
+    private boolean immsersiveStyleSelected() {
+        int selection = Settings.System.getInt(mContext.getContentResolver(),
+                            Settings.System.PIE_STATE, 0);
+        return selection == 1 || selection == 2;
     }
 
     private void addTiles(ViewGroup parent, boolean addMissing, boolean reset) {
@@ -758,6 +765,18 @@ class QuickSettings {
                   mImmersiveTile.setFrontImageResource(R.drawable.ic_qs_immersive_global_off);
                   mImmersiveTile.setFrontText(mContext.getString(R.string.quick_settings_immersive_global_off_label));
                   mModel.addImmersiveFrontTile(mImmersiveTile.getFront(), new QuickSettingsModel.RefreshCallback() {
+                  immersiveTile.setFrontOnClickListener(new View.OnClickListener() {
+					  @Override
+                      public void onClick(View v) {
+                          if (!immsersiveStyleSelected() && mModel.getImmersiveMode() == 0) {
+                              selectImmersiveStyle();
+                          } else {
+                              mModel.switchImmersiveFront();
+                              mModel.refreshImmersiveFrontTile();
+                          }
+                      }
+                  });
+                  mModel.addImmersiveFrontTile(immersiveTile.getFront(), new QuickSettingsModel.RefreshCallback() {
                         @Override
                         public void refreshView(QuickSettingsTileView unused, State state) {
                             mImmersiveTile.setFrontImageResource(state.iconId);
@@ -1390,6 +1409,17 @@ class QuickSettings {
             mModel.updateResources();
         }
         mContainerView.updateResources();
+    }
+
+    private void selectImmersiveStyle() {
+        Resources r = mContext.getResources();
+
+        SettingConfirmationHelper helper = new SettingConfirmationHelper(mContext);
+        helper.showConfirmationDialogForSetting(
+                r.getString(R.string.enable_pie_control_title),
+                r.getString(R.string.enable_pie_control_message),
+                r.getDrawable(R.drawable.want_some_slice),
+                Settings.System.PIE_STATE);
     }
 
     private void showBrightnessDialog() {
