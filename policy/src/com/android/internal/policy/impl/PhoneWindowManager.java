@@ -5144,6 +5144,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     }
 
+    private void toggleOrientationListener(boolean enable) {
+        IStatusBarService statusbar = getStatusBarService();
+        if (statusbar != null) {
+           try {
+               statusbar.toggleOrientationListener(enable);
+           } catch (RemoteException e) {
+               Slog.e(TAG, "RemoteException when controlling orientation sensor", e);
+               // re-acquire status bar service next time it is needed.
+               mStatusBarService = null;
+           }
+        }
+    }
+
     @Override
     public void screenTurnedOff(int why) {
         EventLog.writeEvent(70000, 0);
@@ -5241,6 +5254,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             dismissKeyguardLw();
             startCameraFromGesture();
         }
+        toggleOrientationListener(true);
     }
 
     @Override
