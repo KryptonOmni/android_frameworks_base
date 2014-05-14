@@ -162,7 +162,7 @@ please see themes_device_defaults.xml.
         <item name="galleryItemBackground">@android:drawable/gallery_item_background</item>
         
         <!-- Window attributes -->
-        <item name="windowBackground">@android:drawable/screen_background_selector_dark</item>
+        <item name="windowBackground">@android:drawable/cell_background_selector_dark</item>
         <item name="windowFrame">@null</item>
         <item name="windowNoTitle">false</item>
         <item name="windowFullscreen">false</item>
@@ -906,7 +906,7 @@ please see themes_device_defaults.xml.
     <style name="Theme.Holo">
         <item name="colorForeground">@android:color/bright_foreground_holo_dark</item>
         <item name="colorForegroundInverse">@android:color/bright_foreground_inverse_holo_dark</item>
-        <item name="colorBackground">@android:color/background_holo_dark</item>
+        <item name="colorBackground">@android:color/transparent</item>
         <item name="colorBackgroundCacheHint">@android:drawable/background_cache_hint_selector_holo_dark</item>
         <item name="disabledAlpha">0.5</item>
         <item name="backgroundDimAmount">0.6</item>

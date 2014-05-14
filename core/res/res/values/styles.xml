@@ -1060,6 +1060,24 @@ please see styles_device_defaults.xml.
         <item name="android:background">@null</item>
     </style>
 
+	<style name="Theme.Holo" parent="@style/Theme">
+		<item name="tabIndicatorHolo">@drawable/tab_indicator_holo</item>
+    </style>
+	
+	<style name="Theme.Holo.Light" parent="@style/Theme.Light">
+		<item name="tabIndicatorHolo">@drawable/tab_indicator_holo_light</item>
+	</style>
+
+	<style name="Theme.Holo.Light.DarkActionBar" parent="@style/Theme.Holo.Light">
+		<item name="tabIndicatorHolo">@drawable/tab_indicator_holo_light</item>	
+	</style>
+	
+	<style name="Widget.Holo.Light.ActionBar.TabView" parent="@style/Widget.ActionBar.TabView">
+        <item name="background">@drawable/tab_indicator_ab_holo_light</item>
+        <item name="paddingStart">16.0dip</item>
+        <item name="paddingEnd">16.0dip</item>
+   </style>
+	
     <style name="PreferenceHeaderPanel">
         <item name="android:layout_marginStart">@dimen/preference_screen_side_margin</item>
         <item name="android:layout_marginEnd">@dimen/preference_screen_side_margin_negative</item>
@@ -1443,7 +1461,7 @@ please see styles_device_defaults.xml.
 
     <style name="TextAppearance.Holo.DialogWindowTitle">
         <item name="android:textSize">22sp</item>
-        <item name="android:textColor">@android:color/holo_blue_light</item>
+        <item name="android:textColor">@default_dialog_text_holo_dark</item>
     </style>
 
     <style name="TextAppearance.Holo.CalendarViewWeekDayView" parent="TextAppearance.Small.CalendarViewWeekDayView">
@@ -1542,7 +1560,7 @@ please see styles_device_defaults.xml.
 
     <style name="TextAppearance.Holo.Light.DialogWindowTitle">
         <item name="android:textSize">22sp</item>
-        <item name="android:textColor">@android:color/holo_blue_light</item>
+        <item name="android:textColor">@android:color/default_dialog_text_holo_light</item>
     </style>
 
     <style name="TextAppearance.Holo.Light.CalendarViewWeekDayView" parent="TextAppearance.Small.CalendarViewWeekDayView">
@@ -1739,7 +1757,7 @@ please see styles_device_defaults.xml.
 
     <style name="Widget.Holo.ProgressBar.Horizontal" parent="Widget.ProgressBar.Horizontal">
         <item name="android:progressDrawable">@android:drawable/progress_horizontal_holo_dark</item>
-        <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal_holo</item>
+        <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal_holo_light</item>
         <item name="android:minHeight">16dip</item>
         <item name="android:maxHeight">16dip</item>
     </style>
@@ -1770,7 +1788,7 @@ please see styles_device_defaults.xml.
         <item name="android:indeterminateDrawable">@android:drawable/scrubber_progress_horizontal_holo_dark</item>
         <item name="android:minHeight">13dip</item>
         <item name="android:maxHeight">13dip</item>
-        <item name="android:thumb">@android:drawable/scrubber_control_selector_holo</item>
+        <item name="android:thumb">@android:drawable/scrubber_control_selector_holo_light</item>
         <item name="android:thumbOffset">16dip</item>
         <item name="android:focusable">true</item>
         <item name="android:paddingStart">16dip</item>
@@ -1841,7 +1859,7 @@ please see styles_device_defaults.xml.
     </style>
 
     <style name="Widget.Holo.Tab" parent="Widget.Holo.ActionBar.TabView">
-        <item name="android:background">@android:drawable/tab_indicator_holo</item>
+        <item name="android:background">?tabIndicatorHolo</item>
         <item name="android:layout_width">0dip</item>
         <item name="android:layout_weight">1</item>
         <item name="android:minWidth">80dip</item>
@@ -2285,8 +2303,6 @@ please see styles_device_defaults.xml.
         <item name="android:contentDescription">@string/action_menu_overflow_description</item>
     </style>
 
-    <style name="Widget.Holo.Light.ActionBar.TabView" parent="Widget.Holo.ActionBar.TabView">
-    </style>
 
     <style name="Widget.Holo.Light.Tab" parent="Widget.Holo.Light.ActionBar.TabView">
         <item name="android:background">@android:drawable/tab_indicator_holo</item>

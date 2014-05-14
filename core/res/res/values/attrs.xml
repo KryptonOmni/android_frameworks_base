@@ -30,6 +30,7 @@
         <!-- Default color of foreground imagery. -->
         <attr name="colorForeground" format="color" />
         <!-- Default color of foreground imagery on an inverted background. -->
+		<attr name="tabIndicatorHolo" format="reference" />
         <attr name="colorForegroundInverse" format="color" />
         <!-- Color that matches (as closely as possible) the window background. -->
         <attr name="colorBackground" format="color" />
