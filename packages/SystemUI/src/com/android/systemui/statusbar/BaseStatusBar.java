@@ -76,6 +76,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.RemoteViews;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.internal.statusbar.IStatusBarService;
 import com.android.internal.statusbar.StatusBarIcon;
@@ -654,8 +655,22 @@ public abstract class BaseStatusBar extends SystemUI implements
                             setIconHiddenByUser(packageNameF, item.isChecked());
                             updateNotificationIcons();
                         } else if (item.getItemId() == R.id.notification_floating_item) {
-                            launchFloating(contentIntent);
-                            animateCollapsePanels(CommandQueue.FLAG_EXCLUDE_NONE);
+                            boolean allowed = true;
+                            try {
+                                // preloaded apps are added to the blacklist array when is recreated, handled in the notification manager
+                                allowed = mNotificationManager.isPackageAllowedForFloatingMode(packageNameF);
+                            } catch (android.os.RemoteException ex) {
+                                // System is dead
+                            }
+                            if (allowed) {
+                                launchFloating(contentIntent);
+                                animateCollapsePanels(CommandQueue.FLAG_EXCLUDE_NONE);
+                            } else {
+                                String text = mContext.getResources().getString(R.string.floating_mode_blacklisted_app);
+                                int duration = Toast.LENGTH_LONG;
+                                animateCollapsePanels(CommandQueue.FLAG_EXCLUDE_NONE);
+                                Toast.makeText(mContext, text, duration).show();
+                            }
                         } else {
                             return false;
                         }
@@ -1079,17 +1094,26 @@ public abstract class BaseStatusBar extends SystemUI implements
                 ActivityManagerNative.getDefault().dismissKeyguardOnNextActivity();
             } catch (RemoteException e) {
             }
+            
+            int flags = Intent.FLAG_FLOATING_WINDOW | Intent.FLAG_ACTIVITY_CLEAR_TASK;
+            boolean allowed = true; // default on, except for preloaded false
+            try {
+                // preloaded apps are added to the blacklist array when is recreated, handled in the notification manager
+                allowed = mNotificationManager.isPackageAllowedForFloatingMode(mPkg);
+            } catch (android.os.RemoteException ex) {
+                // System is dead
+            }
 
 			if (mPile.launchNextNotificationFloating()) {
                 if (mPendingIntent != null) {
                     launchFloating(mIntent);
                 }
             //int flags = Intent.FLAG_FLOATING_WINDOW | Intent.FLAG_ACTIVITY_CLEAR_TASK;
-            if (mPendingIntent != null) {
+            } else if (mPendingIntent != null) {
                 int[] pos = new int[2];
                 v.getLocationOnScreen(pos);
                 Intent overlay = new Intent();
-                //if (mFloat) overlay.addFlags(flags);
+                if (mFloat && allowed) overlay.addFlags(flags);
                 overlay.setSourceBounds(
                         new Rect(pos[0], pos[1], pos[0] + v.getWidth(), pos[1] + v.getHeight()));
                 try {
@@ -1099,7 +1123,7 @@ public abstract class BaseStatusBar extends SystemUI implements
                     Log.w(TAG, "Sending contentIntent failed: " + e);
                 }
             } else if(mIntent != null) {
-                //mIntent.addFlags(flags);
+                if (mFloat && allowed) mIntent.addFlags(flags);
                 mContext.startActivity(mIntent);
             }
 
