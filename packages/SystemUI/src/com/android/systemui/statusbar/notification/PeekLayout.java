@@ -102,6 +102,10 @@ public class PeekLayout extends LinearLayout implements SwipeHelper.Callback {
             // system process is dead if we're here.
         }
     }
+    
+    public void  onChildTriggered(View v) {
+		
+	}
 
     @Override
     public void onBeginDrag(View v) {

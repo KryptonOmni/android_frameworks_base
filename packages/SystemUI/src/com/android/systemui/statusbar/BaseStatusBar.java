@@ -22,6 +22,7 @@ import android.content.res.Configuration;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManagerNative;
+import android.app.INotificationManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
@@ -98,7 +99,6 @@ import com.android.systemui.recent.RecentsActivity;
 import com.android.systemui.SearchPanelView;
 import com.android.systemui.SystemUI;
 import com.android.systemui.statusbar.appcirclesidebar.AppCircleSidebar;
-import com.android.systemui.statusbar.notification.NotificationPeek;
 import com.android.systemui.statusbar.policy.BatteryController;
 import com.android.systemui.statusbar.policy.Clock;
 import com.android.systemui.statusbar.notification.NotificationHelper;
@@ -151,6 +151,7 @@ public abstract class BaseStatusBar extends SystemUI implements
     public static final int EXPANDED_FULL_OPEN = -10001;
 
     protected CommandQueue mCommandQueue;
+    protected INotificationManager mNotificationManager;
     protected IStatusBarService mBarService;
     protected H mHandler = createHandler();
 
@@ -225,6 +226,10 @@ public abstract class BaseStatusBar extends SystemUI implements
     }
 
     protected AppCircleSidebar mAppCircleSidebar;
+
+    public INotificationManager getNotificationManager() {
+        return mNotificationManager;
+    }
 
     public IStatusBarService getStatusBarService() {
         return mBarService;
@@ -342,6 +347,8 @@ public abstract class BaseStatusBar extends SystemUI implements
         mDreamManager = IDreamManager.Stub.asInterface(
                 ServiceManager.checkService(DreamService.DREAM_SERVICE));
         mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        mNotificationManager = INotificationManager.Stub.asInterface(
+                ServiceManager.getService(Context.NOTIFICATION_SERVICE));
 
         mSettingsObserver.onChange(false); // set up
         mContext.getContentResolver().registerContentObserver(
@@ -1106,7 +1113,7 @@ public abstract class BaseStatusBar extends SystemUI implements
 
 			if (mPile.launchNextNotificationFloating()) {
                 if (mPendingIntent != null) {
-                    launchFloating(mIntent);
+                    launchFloating(mPendingIntent);
                 }
             //int flags = Intent.FLAG_FLOATING_WINDOW | Intent.FLAG_ACTIVITY_CLEAR_TASK;
             } else if (mPendingIntent != null) {
