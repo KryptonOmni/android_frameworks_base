@@ -38,6 +38,7 @@ import android.content.res.Configuration;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.database.ContentObserver;
+import android.graphics.drawable.Drawable;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.PixelFormat;
@@ -99,6 +100,8 @@ import com.android.systemui.recent.RecentsActivity;
 import com.android.systemui.SearchPanelView;
 import com.android.systemui.SystemUI;
 import com.android.systemui.statusbar.appcirclesidebar.AppCircleSidebar;
+import com.android.systemui.statusbar.notification.Hover;
+import com.android.systemui.statusbar.notification.HoverCling;
 import com.android.systemui.statusbar.policy.BatteryController;
 import com.android.systemui.statusbar.policy.Clock;
 import com.android.systemui.statusbar.notification.NotificationHelper;
@@ -150,6 +153,9 @@ public abstract class BaseStatusBar extends SystemUI implements
     public static final int EXPANDED_LEAVE_ALONE = -10000;
     public static final int EXPANDED_FULL_OPEN = -10001;
 
+    public static final int HOVER_DISABLED = 0;
+    public static final int HOVER_ENABLED = 1;
+
     protected CommandQueue mCommandQueue;
     protected INotificationManager mNotificationManager;
     protected IStatusBarService mBarService;
@@ -200,6 +206,12 @@ public abstract class BaseStatusBar extends SystemUI implements
     // Peek
     protected Peek mPeek;
 
+    // Hover
+    protected Hover mHover;
+    protected int mHoverState;
+    protected ImageView mHoverButton;
+    protected HoverCling mHoverCling;
+
     // UI-specific methods
 
     /**
@@ -245,6 +257,10 @@ public abstract class BaseStatusBar extends SystemUI implements
 
     public NotificationData getNotifications() {
         return mNotificationData;
+    }
+
+    public RemoteViews.OnClickHandler getNotificationClickHandler() {
+        return mOnClickHandler;
     }
 
     private ContentObserver mSettingsObserver = new ContentObserver(mHandler) {
@@ -301,6 +317,12 @@ public abstract class BaseStatusBar extends SystemUI implements
             if (DEBUG) {
                 Log.v(TAG, "Notification click handler invoked for intent: " + pendingIntent);
             }
+
+            // User is clicking a button inside the notification, stop countdowns and
+            // restart override one depending on notification expansion.
+            // We just ignore incoming call case cause is handled differently, as soon as dialer shows, is gone.
+            mHover.processOverridingQueue(mHover.isExpanded());
+
             final boolean isActivity = pendingIntent.isActivity();
             if (isActivity) {
                 try {
@@ -368,9 +390,12 @@ public abstract class BaseStatusBar extends SystemUI implements
         mStatusBarContainer = new FrameLayout(mContext);
 
         mPeek = new Peek(this, mContext);
+        mHover = new Hover(this, mContext);
+        mHoverCling = new HoverCling(mContext);
         mNotificationHelper = new NotificationHelper(this, mContext);
 
         mPeek.setNotificationHelper(mNotificationHelper);
+        mHover.setNotificationHelper(mNotificationHelper);
 
         // Connect in to the status bar manager service
         StatusBarIconList iconList = new StatusBarIconList();
@@ -437,6 +462,33 @@ public abstract class BaseStatusBar extends SystemUI implements
 
         GlobalsObserver settingsObserver = new GlobalsObserver(new Handler());
         settingsObserver.observe();
+
+        mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.HOVER_STATE),
+                        false, new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                updateHoverState();
+            }
+        });
+
+        updateHoverState();
+
+        mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.DIALPAD_STATE),
+                        false, new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean showing = Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.DIALPAD_STATE, 0) != 0;
+                if(showing) mHover.dismissHover(false, false);
+            }
+        });
+    }
+
+    public Hover getHoverInstance() {
+        if(mHover == null) mHover = new Hover(this, mContext);
+        return mHover;
     }
 
     public Peek getPeekInstance() {
@@ -517,6 +569,17 @@ public abstract class BaseStatusBar extends SystemUI implements
                     }
                 }
             };
+    }
+
+    protected void updateHoverState() {
+        mHoverState = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.HOVER_STATE, HOVER_DISABLED);
+
+        mHoverButton.setImageResource(mHoverState != HOVER_DISABLED
+                ? R.drawable.ic_notify_hover_pressed
+                        : R.drawable.ic_notify_hover_normal);
+
+        mHover.setHoverActive(mHoverState == HOVER_ENABLED);
     }
 
     public void userSwitched(int newUserId) {
@@ -1200,6 +1263,10 @@ public abstract class BaseStatusBar extends SystemUI implements
 
         mPeek.removeNotification(entry.notification);
 
+        // If a notif is on hover list or currently showed in hover,
+        // remove (hide) it if system does.
+        mHover.removeNotification(entry);
+
         return entry.notification;
     }
 
@@ -1224,8 +1291,8 @@ public abstract class BaseStatusBar extends SystemUI implements
             handleNotificationError(key, notification, "Couldn't create icon: " + ic);
             return null;
         }
-        // Construct the expanded view.
         NotificationData.Entry entry = new NotificationData.Entry(key, notification, iconView);
+        // Construct the expanded view.
         if (!inflateViews(entry, mPile)) {
             handleNotificationError(key, notification, "Couldn't expand RemoteViews for: "
                     + notification);
@@ -1250,7 +1317,14 @@ public abstract class BaseStatusBar extends SystemUI implements
             } else {
                 mPeek.addNotification(entry.notification);
             }
+            mHover.addStatusBarNotification(entry.notification);
         } else {
+            // screen on - check if hover is enabled
+            if (mNotificationHelper.isHoverEnabled()) {
+                mHover.setNotification(entry, false);
+            } else {
+                mHover.addStatusBarNotification(entry.notification);
+            }
             mPeek.addNotification(entry.notification);
         }
     }
@@ -1259,7 +1333,7 @@ public abstract class BaseStatusBar extends SystemUI implements
         addNotificationViews(createNotificationViews(key, notification));
     }
 
-    protected void updateExpansionStates() {
+    public void updateExpansionStates() {
         int N = mNotificationData.size();
         for (int i = 0; i < N; i++) {
             NotificationData.Entry entry = mNotificationData.get(i);
@@ -1284,6 +1358,15 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected boolean immersiveModeHidesStatusBar() {
         return (mImmersiveModeStyle == IMMERSIVE_MODE_FULL)
             || (mImmersiveModeStyle == IMMERSIVE_MODE_HIDE_ONLY_STATUSBAR);
+
+	}
+	
+    public void animateStatusBarOut() {
+        // should be overridden
+    }
+
+    public void animateStatusBarIn() {
+        // should be overridden
     }
 
     protected abstract void haltTicker();
@@ -1293,6 +1376,7 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected abstract void updateExpandedViewPos(int expandedPosition);
     protected abstract int getExpandedViewMaxHeight();
     protected abstract boolean shouldDisableNavbarGestures();
+    public abstract boolean isExpandedVisible();
 
     protected boolean isTopNotification(ViewGroup parent, NotificationData.Entry entry) {
         return parent != null && parent.indexOfChild(entry.row) == 0;
@@ -1350,9 +1434,10 @@ public abstract class BaseStatusBar extends SystemUI implements
                 && notification.getScore() == oldNotification.getScore();
                 // score now encompasses/supersedes isOngoing()
 
-        boolean updateTicker = notification.getNotification().tickerText != null
+        boolean updateTicker = (notification.getNotification().tickerText != null
                 && !TextUtils.equals(notification.getNotification().tickerText,
-                        oldEntry.notification.getNotification().tickerText);
+                        oldEntry.notification.getNotification().tickerText)) &&
+                        (mHoverState == HOVER_DISABLED);
         boolean isTopAnyway = isTopNotification(rowParent, oldEntry);
         if (contentsUnchanged && bigContentsUnchanged && (orderUnchanged || isTopAnyway)) {
             if (DEBUG) Log.d(TAG, "reusing notification for key: " + key);
@@ -1449,7 +1534,15 @@ public abstract class BaseStatusBar extends SystemUI implements
             } else {
                 mPeek.addNotification(entry.notification);
             }
+            mHover.addStatusBarNotification(entry.notification);
         } else {
+            // screen on - check if hover is enabled
+            if (mNotificationHelper.isHoverEnabled()) {
+                mHover.setNotification(entry, true);
+            } else {
+                // We pass this to hover here only if it doesn't show
+                mHover.addStatusBarNotification(entry.notification);
+            }
             mPeek.addNotification(entry.notification);
         }
     }
