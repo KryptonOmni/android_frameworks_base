@@ -117,10 +117,6 @@ public class KeyguardViewManager {
     private NotificationViewManager mNotificationViewManager;
     private boolean mLockscreenNotifications = false;
 
-    private NotificationHostView mNotificationView;
-    private NotificationViewManager mNotificationViewManager;
-    private boolean mLockscreenNotifications = false;
-
     private KeyguardUpdateMonitorCallback mBackgroundChanger = new KeyguardUpdateMonitorCallback() {
         @Override
         public void onSetBackground(Bitmap bmp) {
