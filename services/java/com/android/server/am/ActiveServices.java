@@ -203,7 +203,6 @@ public final class ActiveServices {
                     Slog.i(TAG, "Waited long enough for: " + r);
                     mStartingBackground.remove(i);
                     N--;
-                    i--;
                 }
             }
             while (mDelayedStartList.size() > 0

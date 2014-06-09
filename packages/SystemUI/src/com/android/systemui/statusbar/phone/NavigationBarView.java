@@ -541,9 +541,14 @@ public class NavigationBarView extends LinearLayout implements NavigationCallbac
         final boolean disableBack = ((disabledFlags & View.STATUS_BAR_DISABLE_BACK) != 0)
                 && ((mNavigationIconHints & StatusBarManager.NAVIGATION_HINT_BACK_ALT) == 0);
         final boolean disableSearch = ((disabledFlags & View.STATUS_BAR_DISABLE_SEARCH) != 0);
+	final boolean disablePower = ((disabledFlags & View.STATUS_BAR_DISABLE_BACK) != 0)
+                && ((mNavigationIconHints & StatusBarManager.NAVIGATION_HINT_BACK_ALT) == 0);
+        final boolean disableCaptura = ((disabledFlags & View.STATUS_BAR_DISABLE_BACK) != 0)
+                && ((mNavigationIconHints & StatusBarManager.NAVIGATION_HINT_BACK_ALT) == 0);
 
         if (SLIPPERY_WHEN_DISABLED) {
-            setSlippery(disableHome && disableRecent && disableBack && disableSearch);
+            //setSlippery(disableHome && disableRecent && disableBack && disableSearch);
+            setSlippery(disableHome && disableRecent && disableBack && disableSearch && disablePower && disableCaptura);
         }
 
         ViewGroup navButtons = (ViewGroup) mCurrentView.findViewById(R.id.nav_buttons);
@@ -570,6 +575,8 @@ public class NavigationBarView extends LinearLayout implements NavigationCallbac
         setButtonWithTagVisibility(NavbarEditor.NAVBAR_ALWAYS_MENU, !disableRecent);
         setButtonWithTagVisibility(NavbarEditor.NAVBAR_MENU_BIG, !disableRecent);
         setButtonWithTagVisibility(NavbarEditor.NAVBAR_SEARCH, !disableRecent);
+	setButtonWithTagVisibility(NavbarEditor.NAVBAR_POWER, !disablePower);
+	setButtonWithTagVisibility(NavbarEditor.NAVBAR_CAPTURA, !disableCaptura);
 
         final boolean showSearch = disableHome && !disableSearch;
         final boolean showCamera = showSearch && !mCameraDisabledByDpm &&

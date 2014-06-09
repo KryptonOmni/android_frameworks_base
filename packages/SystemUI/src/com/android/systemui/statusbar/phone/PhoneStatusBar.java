@@ -43,6 +43,8 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.content.res.CustomTheme;
 import android.content.res.Resources;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.ContentObserver;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
@@ -3056,6 +3058,18 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
             }
         }
     };
+
+    private boolean isAvailableApp(String packageName) {
+        final PackageManager pm = mContext.getPackageManager();
+        try {
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            int enabled = pm.getApplicationEnabledSetting(packageName);
+            return enabled != PackageManager.COMPONENT_ENABLED_STATE_DISABLED &&
+                enabled != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER;
+        } catch (NameNotFoundException e) {
+            return false;
+        }
+    }
 
     private View.OnClickListener mClockClickListener = new View.OnClickListener() {
         public void onClick(View v) {
