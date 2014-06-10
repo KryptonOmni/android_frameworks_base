@@ -131,8 +131,6 @@
     <string name="navbar_menu_conditional_button">Menu (autoHide) button</string>
     <string name="navbar_menu_always_button">Menu (alwaysShow) button</string>
     <string name="navbar_menu_big_button">Menu button</string>
-    <string name="navbar_power_button">Botón Power</string>
-    <string name="navbar_captura_button">Botón Captura</string>
     
         <!-- Quick pulldown confirmation dialog -->
     <string name="quick_settings_quick_pull_down_title">Quick pull down</string>
@@ -146,7 +144,4 @@
     <string name="enable_pie_control_title">Pie controls</string>
     <string name="enable_pie_control_message">Would you like to use pie controls while in immersive mode?</string>
     <string name="pie_state">@string/enable_pie_control_title</string>
-    
-    <!-- Content description of the halo button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
-    <string name="accessibility_halo">Create notification halo.</string>
 </resources>

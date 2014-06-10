@@ -2589,10 +2589,6 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      */
     public static final int STATUS_BAR_DISABLE_SEARCH = 0x02000000;
 
-    public static final int STATUS_BAR_DISABLE_POWER = 0x04000000;
-
-    public static final int STATUS_BAR_DISABLE_CAPTURA = 0x08000000;
-
     /**
      * @hide
      *
@@ -18436,7 +18432,9 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
     /** @hide */
     public void hackTurnOffWindowResizeAnim(boolean off) {
-        mAttachInfo.mTurnOffWindowResizeAnim = off;
+        if (mAttachInfo != null) {
+            mAttachInfo.mTurnOffWindowResizeAnim = off;
+        }
     }
 
     /**
