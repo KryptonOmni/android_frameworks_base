@@ -286,6 +286,5 @@
                   android:exported="true"
                   android:theme="@style/Theme.DummyActivity">
         </activity>
-
     </application>
 </manifest>
