@@ -127,4 +127,32 @@
     <string name="enable_pie_control_title">Controles circulares</string>
     <string name="enable_pie_control_message">¿Le gustaría utilizar los controles circulares en el modo inmersivo?</string>
     <string name="status_bar_recent_floating_item_title">Modo flotante</string>
+    
+    <!-- App circle sidebar -->
+    <string name="app_float_maximize_item_title">Maximizar</string>
+    <string name="app_float_item_title">Ver en flotante</string>
+    <string name="app_stop_item_title">Matar app</string>
+    
+    <!-- Content description of the halo button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_halo">Crear notificacion de halo</string>
+    
+    <!-- Title shown in notification popup for launching notification in floating mode -->
+    <string name="status_bar_notification_floating_item_title">Modo flotante</string>
+    
+    <!-- Swipe recents for floating window confirmation dialog -->
+    <string name="recents_swipe_floating_title">Deslizar en recientes para flotante</string>
+    <string name="recents_swipe_floating_message_portrait">¿Te gustaria que cuando delizaras la aplicación a la izquierda se abriera en modo flotante?</string>
+    <string name="recents_swipe_floating_message_landscape">¿Te gustaria que cuando delizaras la aplicación hacia abajo se abriera en modo flotante?</string>
+
+    <!-- Swipe notification for floating window confirmation dialog -->
+    <string name="status_bar_notification_swipe_floating_title">Deslizar en recientes para flotante</string>
+    <string name="status_bar_notification_swipe_floating_message">¿Te gustaria que cuando delizaras la aplicación a la izquierda se abriera en modo flotante?</string>
+    <string name="recents_swipe_floating" translatable="false">@string/recents_swipe_floating_title</string>
+    <string name="status_bar_notification_swipe_floating" translatable="false">@string/status_bar_notification_swipe_floating_title</string>
+    
+    <!-- Blacklisted app for floating mode -->
+    <string name="floating_mode_blacklisted_app">La aplicación actual está en la lista negra, puede que no funcione como se espera en el modo flotante </string>
+
+	<!-- First time run hover -->
+    <string name="hover_cling_text">Hover ahora está activado.\n\nCuando recibas una nueva notificación, se mostrará un notificación, permitiéndole responder a ello sin salir de la aplicación actual.</string>
 </resources>
